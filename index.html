@@ -89,8 +89,9 @@
   .bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#60a5fa,var(--accent))}
   .verdict-ok{color:var(--good);font-weight:700}.verdict-no{color:var(--bad);font-weight:700}
 
-  footer{color:var(--mut);font-size:.84rem;margin-top:34px;border-top:1px solid var(--line);padding-top:16px;line-height:1.6}
-  footer code{font-size:.8rem}
+  .foot{color:var(--mut);font-size:.8rem;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);line-height:1.55}
+  .foot code{font-size:.76rem}
+  .foot b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -125,10 +126,9 @@
     <aside>
       <p class="steplabel"><span class="stepnum">3</span> Model verdict</p>
       <div class="card" id="card"></div>
+      <p class="foot" id="foot"></p>
     </aside>
   </div>
-
-  <footer id="foot"></footer>
 </div>
 
 <script src="data.js"></script>
