@@ -126,7 +126,6 @@
     <aside>
       <p class="steplabel"><span class="stepnum">3</span> Model verdict</p>
       <div class="card" id="card"></div>
-      <p class="foot" id="foot"></p>
     </aside>
   </div>
 </div>
@@ -184,13 +183,6 @@ function render(){const c=D.clips[cur];
 sel.onchange=()=>{cur=+sel.value;render();};
 document.getElementById('prev').onclick=()=>{cur=(cur-1+D.clips.length)%D.clips.length;sel.value=cur;render();};
 document.getElementById('next').onclick=()=>{cur=(cur+1)%D.clips.length;sel.value=cur;render();};
-
-const ndet=D.clips.filter(c=>c.binary_correct).length;
-document.getElementById('foot').innerHTML=
-  `<b>Model:</b> Unified-SFT, f16, Phase&nbsp;3 (Qwen3.5-4B QLoRA, 4-bit). `+
-  `Verdict = arg&nbsp;max over the closed menu <code>{${D.menu.join(', ')}}</code>. `+
-  `It holds on Sim, the real robot and a viewpoint shift; on a neutral robot it detects but can mis-name the mode; `+
-  `on far-OOD (different robot <em>and</em> task) it breaks down. &mdash; Bachelor's thesis, Hao Chen.`;
 
 render();
 </script>
