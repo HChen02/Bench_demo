@@ -3,59 +3,111 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RAFD - VLM robotic failure monitor</title>
+<title>RAFD — VLM robotic failure monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-  :root{ --accent:#0072B2; --good:#1B7837; --bad:#B2182B; --bg:#f6f7f9; --card:#fff; --ink:#1b1f24; --mut:#5b6570; }
+  :root{
+    --accent:#2563eb; --accent2:#1e40af; --good:#16a34a; --bad:#dc2626;
+    --bg1:#eef2f7; --bg2:#f8fafc; --card:#ffffff; --ink:#0f172a; --mut:#64748b;
+    --line:#e6eaf0; --chip:#eef2f8;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
   *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-       background:var(--bg);color:var(--ink);line-height:1.5}
-  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 60px}
-  h1{font-size:1.5rem;margin:0 0 4px}
-  .sub{color:var(--mut);margin:0 0 22px;font-size:.96rem}
-  .sub b{color:var(--ink)}
-  .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
-  select{font-size:1rem;padding:9px 12px;border:1px solid #cfd6dd;border-radius:9px;background:#fff;min-width:280px}
-  button{font-size:.95rem;padding:9px 14px;border:0;border-radius:9px;background:var(--accent);color:#fff;cursor:pointer}
-  button.ghost{background:#e7ebef;color:var(--ink)}
-  .stage{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start}
-  @media(max-width:760px){.stage{grid-template-columns:1fr}}
-  .player{background:#000;border-radius:12px;overflow:hidden;aspect-ratio:500/340;display:flex;align-items:center;justify-content:center}
-  .player img{width:100%;height:100%;object-fit:contain}
-  .strip{display:flex;gap:4px;overflow-x:auto;margin-top:8px;padding-bottom:4px}
-  .strip img{height:46px;border-radius:4px;border:2px solid transparent;cursor:pointer;flex:0 0 auto}
-  .strip img.active{border-color:var(--accent)}
-  .card{background:var(--card);border:1px solid #e4e8ec;border-radius:14px;padding:18px 18px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-  .badge{display:inline-block;font-weight:700;font-size:.78rem;letter-spacing:.04em;padding:4px 10px;border-radius:999px;color:#fff;margin-bottom:10px}
-  .verdict{font-size:1.32rem;font-weight:750;margin:2px 0 6px}
-  .body{color:var(--ink);margin:0 0 14px}
-  .meta{font-size:.9rem;color:var(--mut);border-top:1px solid #eef1f4;padding-top:12px;display:grid;gap:6px}
-  .meta code{background:#eef1f4;padding:1px 7px;border-radius:6px;color:var(--ink);font-size:.86rem}
-  .bar{height:7px;background:#eef1f4;border-radius:999px;overflow:hidden;margin-top:3px}
-  .bar > i{display:block;height:100%;background:var(--accent)}
-  .ok{color:var(--good);font-weight:650}.no{color:var(--bad);font-weight:650}
-  .src{display:inline-block;font-size:.74rem;color:var(--mut);border:1px solid #d8dee4;border-radius:999px;padding:2px 9px;margin-bottom:10px}
-  footer{color:var(--mut);font-size:.84rem;margin-top:30px;border-top:1px solid #e4e8ec;padding-top:14px}
+  html,body{margin:0}
+  body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.55;
+       background:radial-gradient(1200px 600px at 80% -10%,#dbe6fb 0,transparent 60%),
+                  linear-gradient(180deg,var(--bg1),var(--bg2));min-height:100vh}
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 22px 64px}
+  header h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}
+  header h1 .tag{color:var(--accent)}
+  .sub{color:var(--mut);margin:0 0 4px;font-size:.98rem;max-width:760px}
+  .sub b{color:var(--ink);font-weight:600}
+  .note{color:var(--mut);font-size:.82rem;margin:6px 0 22px;max-width:760px}
+
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+  .selectwrap{position:relative;flex:1 1 320px;min-width:260px}
+  .selectwrap::after{content:"▾";position:absolute;right:14px;top:50%;transform:translateY(-50%);
+       color:var(--mut);pointer-events:none;font-size:.8rem}
+  select{appearance:none;width:100%;font:inherit;font-size:1rem;font-weight:500;padding:11px 34px 11px 14px;
+       border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;
+       box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .btn{font:inherit;font-size:.95rem;font-weight:600;padding:11px 16px;border:1px solid var(--line);
+       border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .btn:hover{border-color:#cdd6e4}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+  .btn.icon{width:44px;padding:11px 0;text-align:center;font-size:1.05rem}
+
+  .stage{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:22px;align-items:start}
+  @media(max-width:860px){.stage{grid-template-columns:1fr}}
+
+  .player{position:relative;background:#0b1220;border-radius:16px;overflow:hidden;aspect-ratio:500/340;
+       display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(15,23,42,.12)}
+  .player img{width:100%;height:100%;object-fit:contain;display:block}
+  .player .fnum{position:absolute;left:10px;bottom:10px;background:rgba(8,12,22,.7);color:#cbd5e1;
+       font:600 .72rem/1 var(--mono);padding:5px 8px;border-radius:8px;letter-spacing:.02em}
+  .strip{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:6px;scrollbar-width:thin}
+  .strip img{height:52px;width:auto;border-radius:7px;border:2px solid transparent;cursor:pointer;flex:0 0 auto;
+       opacity:.62;transition:opacity .12s,border-color .12s}
+  .strip img:hover{opacity:1}
+  .strip img.active{border-color:var(--accent);opacity:1}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;
+       box-shadow:0 10px 30px rgba(15,23,42,.07);position:sticky;top:18px}
+  .src{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+       color:var(--mut);background:var(--chip);border-radius:999px;padding:4px 11px;margin-bottom:14px}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:.82rem;letter-spacing:.06em;
+       padding:7px 14px;border-radius:999px;color:#fff}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:#fff;opacity:.9}
+  .pill.good{background:linear-gradient(135deg,#22c55e,#16a34a)}
+  .pill.bad{background:linear-gradient(135deg,#ef4444,#dc2626)}
+  .mode{font-size:1.5rem;font-weight:800;letter-spacing:-.01em;margin:14px 0 6px;line-height:1.15}
+  .desc{color:#334155;margin:0 0 18px;font-size:.97rem}
+  .rows{border-top:1px solid var(--line);padding-top:16px;display:grid;gap:13px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.92rem}
+  .row .k{color:var(--mut);font-weight:500}
+  .row .v{font-weight:600;text-align:right}
+  code{font-family:var(--mono);font-size:.84rem;background:var(--chip);color:var(--ink);
+       padding:3px 9px;border-radius:7px}
+  .confwrap{display:grid;gap:7px}
+  .confhead{display:flex;justify-content:space-between;align-items:center;font-size:.92rem}
+  .bar{height:9px;background:var(--chip);border-radius:999px;overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#60a5fa,var(--accent))}
+  .verdict-ok{color:var(--good);font-weight:700}.verdict-no{color:var(--bad);font-weight:700}
+
+  footer{color:var(--mut);font-size:.84rem;margin-top:34px;border-top:1px solid var(--line);padding-top:16px;line-height:1.6}
+  footer code{font-size:.8rem}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>RAFD &middot; VLM robotic failure monitor</h1>
-  <p class="sub">A single <b>4-billion-parameter</b> vision&ndash;language model (Unified-SFT, 16 frames,
-     trained <b>only in simulation</b>) watches a pick-and-place execution and reports whether it
-     succeeded &mdash; and if not, <b>which failure mode</b>. Pick a sample clip.
-     <em>(Pre-computed static demo: verdicts are the model's actual deterministic outputs.)</em></p>
+  <header>
+    <h1>RAFD <span class="tag">·</span> VLM robotic-failure monitor</h1>
+    <p class="sub">A single <b>4-billion-parameter</b> vision&ndash;language model (Unified&#8209;SFT, 16 frames,
+       trained <b>only in simulation</b>) watches a pick-and-place execution and reports whether it
+       succeeded &mdash; and if not, <b>which failure mode</b>.</p>
+    <p class="note">Pre-computed static demo &mdash; every verdict below is the model's actual deterministic output.</p>
+  </header>
 
   <div class="controls">
-    <select id="pick"></select>
-    <button id="play" class="ghost">&#9654; Play</button>
+    <div class="selectwrap"><select id="pick"></select></div>
+    <button id="prev" class="btn icon" title="Previous clip">&#8249;</button>
+    <button id="play" class="btn primary">&#9654;&nbsp; Play</button>
+    <button id="next" class="btn icon" title="Next clip">&#8250;</button>
   </div>
 
   <div class="stage">
-    <div>
-      <div class="player"><img id="frame" alt="frame"></div>
+    <section>
+      <div class="player">
+        <img id="frame" alt="execution frame">
+        <span class="fnum" id="fnum"></span>
+      </div>
       <div class="strip" id="strip"></div>
-    </div>
-    <div class="card" id="card"></div>
+    </section>
+    <aside class="card" id="card"></aside>
   </div>
 
   <footer id="foot"></footer>
@@ -63,51 +115,57 @@
 
 <script src="data.js"></script>
 <script>
-const D = window.RAFD_DATA, sel = document.getElementById('pick'),
-      frame = document.getElementById('frame'), strip = document.getElementById('strip'),
-      card = document.getElementById('card'), playBtn = document.getElementById('play');
-let cur = 0, fi = 0, timer = null;
+const D=window.RAFD_DATA, sel=document.getElementById('pick'),
+      frame=document.getElementById('frame'), fnum=document.getElementById('fnum'),
+      strip=document.getElementById('strip'), card=document.getElementById('card'),
+      playBtn=document.getElementById('play');
+let cur=0, fi=0, timer=null;
 
-D.clips.forEach((c,i)=>{ const o=document.createElement('option'); o.value=i;
-  o.textContent=c.source+'  —  '+c.title; sel.appendChild(o); });
+const MODE={success:'Clean pick-and-place', pick:'Pick failure',
+            drop:'Dropped in transit', place:'Wrong placement', release:'Object never released'};
 
-function showFrame(i){ const c=D.clips[cur]; fi=(i+c.frames.length)%c.frames.length;
-  frame.src=c.frames[fi];
-  [...strip.children].forEach((t,k)=>t.classList.toggle('active',k===fi)); }
+D.clips.forEach((c,i)=>{const o=document.createElement('option');o.value=i;
+  o.textContent=c.source+'  —  '+c.title;sel.appendChild(o);});
 
-function render(){ const c=D.clips[cur]; stop();
+function showFrame(i){const c=D.clips[cur];fi=(i+c.frames.length)%c.frames.length;
+  frame.src=c.frames[fi];fnum.textContent='frame '+(fi+1)+' / '+c.frames.length;
+  [...strip.children].forEach((t,k)=>t.classList.toggle('active',k===fi));}
+
+function render(){const c=D.clips[cur];stop();
   strip.innerHTML='';
-  c.frames.forEach((f,k)=>{ const t=document.createElement('img'); t.src=f;
-    t.onclick=()=>showFrame(k); strip.appendChild(t); });
+  c.frames.forEach((f,k)=>{const t=document.createElement('img');t.src=f;t.loading='lazy';
+    t.onclick=()=>showFrame(k);strip.appendChild(t);});
   showFrame(0);
-  const badgeColor=c.ok?'var(--good)':'var(--bad)';
-  const dot=c.ok?'🟢':'🔴';
-  const conf=(c.conf==null)?'—':Math.round(c.conf*100)+'%';
-  const confW=(c.conf==null)?0:Math.round(c.conf*100);
-  card.innerHTML =
-    `<span class="src">${c.source}</span><br>`+
-    `<span class="badge" style="background:${badgeColor}">${dot} ${c.ok?'SUCCESS':'FAILURE'}</span>`+
-    `<div class="verdict">${c.head}</div>`+
-    `<p class="body">${c.body}</p>`+
-    `<div class="meta">`+
-      `<div>Model verdict: <code>${c.pred_word}</code></div>`+
-      `<div>Confidence: ${conf}<div class="bar"><i style="width:${confW}%"></i></div></div>`+
-      `<div>Ground truth: <code>${c.gt_word}</code> &rarr; `+
-        `<span class="${c.correct?'ok':'no'}">${c.correct?'✔ correct':'✘ mismatch'}</span></div>`+
+  const conf=(c.conf==null)?null:Math.round(c.conf*100);
+  card.innerHTML=
+    `<div class="src">${c.source}</div>`+
+    `<div><span class="pill ${c.ok?'good':'bad'}"><span class="dot"></span>${c.ok?'SUCCESS':'FAILURE'}</span></div>`+
+    `<h2 class="mode">${MODE[c.pred_word]||c.head}</h2>`+
+    `<p class="desc">${c.body}</p>`+
+    `<div class="rows">`+
+      `<div class="row"><span class="k">Model verdict</span><span class="v"><code>${c.pred_word}</code></span></div>`+
+      `<div class="confwrap"><div class="confhead"><span class="k">Confidence</span>`+
+        `<span class="v">${conf==null?'—':conf+'%'}</span></div>`+
+        `<div class="bar"><i style="width:${conf==null?0:conf}%"></i></div></div>`+
+      `<div class="row"><span class="k">Ground truth</span>`+
+        `<span class="v"><code>${c.gt_word}</code> &nbsp;`+
+        `<span class="${c.correct?'verdict-ok':'verdict-no'}">${c.correct?'✓ correct':'✗ mismatch'}</span></span></div>`+
     `</div>`;
 }
-function play(){ if(timer)return; playBtn.innerHTML='&#10073;&#10073; Pause';
-  timer=setInterval(()=>showFrame(fi+1),180); }
-function stop(){ if(timer){clearInterval(timer);timer=null;} playBtn.innerHTML='&#9654; Play'; }
-playBtn.onclick=()=>{ timer?stop():play(); };
-sel.onchange=()=>{ cur=+sel.value; render(); };
+function play(){if(timer)return;playBtn.innerHTML='&#10073;&#10073;&nbsp; Pause';
+  timer=setInterval(()=>showFrame(fi+1),180);}
+function stop(){if(timer){clearInterval(timer);timer=null;}playBtn.innerHTML='&#9654;&nbsp; Play';}
+playBtn.onclick=()=>{timer?stop():play();};
+sel.onchange=()=>{cur=+sel.value;render();};
+document.getElementById('prev').onclick=()=>{cur=(cur-1+D.clips.length)%D.clips.length;sel.value=cur;render();};
+document.getElementById('next').onclick=()=>{cur=(cur+1)%D.clips.length;sel.value=cur;render();};
 
 const n_ok=D.clips.filter(c=>c.correct).length;
-document.getElementById('foot').innerHTML =
-  `Model: Unified-SFT, f16, Phase&nbsp;3 (Qwen3.5-4B QLoRA, 4-bit). `+
-  `Verdict = arg max over the closed menu {${D.menu.join(', ')}}. `+
-  `${n_ok}/${D.clips.length} sample clips correct; the cross-robot (ViFailback) clips are the `+
-  `documented open frontier. &mdash; TFG, Hao Chen.`;
+document.getElementById('foot').innerHTML=
+  `<b>Model:</b> Unified-SFT, f16, Phase&nbsp;3 (Qwen3.5-4B QLoRA, 4-bit). `+
+  `Verdict = arg&nbsp;max over the closed menu <code>{${D.menu.join(', ')}}</code>. `+
+  `${n_ok}/${D.clips.length} sample clips correct; the cross-robot (ViFailback) clip is the `+
+  `documented open frontier. &mdash; Bachelor's thesis, Hao Chen.`;
 
 render();
 </script>
