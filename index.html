@@ -153,11 +153,18 @@ function render(){const c=D.clips[cur];
   card.className='card '+(c.ok?'good':'bad');
   const yes='<span class="verdict-ok">✓ correct</span>',
         no='<span class="verdict-no">✗ wrong</span>';
-  let gtline, detline, modeline='';
+  let gtline, detline, modeline='', headline, desc;
   if(c.binary_only){
+    // far-OOD / probe: only success/failure is meaningful, no fine mode class
+    headline=c.ok?'Success':'Failure detected';
+    desc=c.ok
+      ? 'The model judged this execution a success.'
+      : 'The model flagged this as a failure. On a different robot and task the fine failure mode is out of scope, so only success/failure is shown.';
     gtline=`<code>${c.gt_binary}</code> <span class="tagmut">binary-only set</span>`;
     detline=c.binary_correct?yes:no;
   }else{
+    headline=MODE[c.pred_word]||c.head;
+    desc=c.body;
     gtline=`<code>${c.gt_mode||c.gt_binary}</code>`;
     detline=c.binary_correct?yes:no;
     if(c.gt_mode!=null)
@@ -168,8 +175,8 @@ function render(){const c=D.clips[cur];
   card.innerHTML=
     `<div class="src">${c.source}</div>`+
     `<div><span class="pill ${c.ok?'good':'bad'}"><span class="dot"></span>${c.ok?'SUCCESS':'FAILURE'}</span></div>`+
-    `<h2 class="mode">${MODE[c.pred_word]||c.head}</h2>`+
-    `<p class="desc">${c.body}</p>`+
+    `<h2 class="mode">${headline}</h2>`+
+    `<p class="desc">${desc}</p>`+
     `<div class="rows">`+
       `<div class="confwrap"><div class="confhead"><span class="k">Confidence</span>`+
         `<span class="v">${conf==null?'—':conf+'%'}</span></div>`+
