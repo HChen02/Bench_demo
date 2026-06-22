@@ -189,7 +189,6 @@ const ndet=D.clips.filter(c=>c.binary_correct).length;
 document.getElementById('foot').innerHTML=
   `<b>Model:</b> Unified-SFT, f16, Phase&nbsp;3 (Qwen3.5-4B QLoRA, 4-bit). `+
   `Verdict = arg&nbsp;max over the closed menu <code>{${D.menu.join(', ')}}</code>. `+
-  `<b>Detection (success/failure) correct on ${ndet}/${D.clips.length} sample clips.</b> `+
   `It holds on Sim, the real robot and a viewpoint shift; on a neutral robot it detects but can mis-name the mode; `+
   `on far-OOD (different robot <em>and</em> task) it breaks down. &mdash; Bachelor's thesis, Hao Chen.`;
 
