@@ -36,7 +36,8 @@ window.RAFD_DATA = {
     "clips/sim__case_000002__perfect/frame_13.png",
     "clips/sim__case_000002__perfect/frame_14.png",
     "clips/sim__case_000002__perfect/frame_15.png"
-   ]
+   ],
+   "gif": "clips/sim__case_000002__perfect/clip.gif"
   },
   {
    "key": "sim__case_000002__fail_pick",
@@ -66,7 +67,8 @@ window.RAFD_DATA = {
     "clips/sim__case_000002__fail_pick/frame_13.png",
     "clips/sim__case_000002__fail_pick/frame_14.png",
     "clips/sim__case_000002__fail_pick/frame_15.png"
-   ]
+   ],
+   "gif": "clips/sim__case_000002__fail_pick/clip.gif"
   },
   {
    "key": "sim__case_000002__fail_move",
@@ -96,7 +98,8 @@ window.RAFD_DATA = {
     "clips/sim__case_000002__fail_move/frame_13.png",
     "clips/sim__case_000002__fail_move/frame_14.png",
     "clips/sim__case_000002__fail_move/frame_15.png"
-   ]
+   ],
+   "gif": "clips/sim__case_000002__fail_move/clip.gif"
   },
   {
    "key": "sim__case_000002__fail_place",
@@ -126,7 +129,8 @@ window.RAFD_DATA = {
     "clips/sim__case_000002__fail_place/frame_13.png",
     "clips/sim__case_000002__fail_place/frame_14.png",
     "clips/sim__case_000002__fail_place/frame_15.png"
-   ]
+   ],
+   "gif": "clips/sim__case_000002__fail_place/clip.gif"
   },
   {
    "key": "sim__case_000002__fail_no_release",
@@ -156,7 +160,8 @@ window.RAFD_DATA = {
     "clips/sim__case_000002__fail_no_release/frame_13.png",
     "clips/sim__case_000002__fail_no_release/frame_14.png",
     "clips/sim__case_000002__fail_no_release/frame_15.png"
-   ]
+   ],
+   "gif": "clips/sim__case_000002__fail_no_release/clip.gif"
   },
   {
    "key": "real__ball__perfect",
@@ -186,7 +191,8 @@ window.RAFD_DATA = {
     "clips/real__ball__perfect/frame_13.png",
     "clips/real__ball__perfect/frame_14.png",
     "clips/real__ball__perfect/frame_15.png"
-   ]
+   ],
+   "gif": "clips/real__ball__perfect/clip.gif"
   },
   {
    "key": "real__ball__fail_pick",
@@ -216,7 +222,8 @@ window.RAFD_DATA = {
     "clips/real__ball__fail_pick/frame_13.png",
     "clips/real__ball__fail_pick/frame_14.png",
     "clips/real__ball__fail_pick/frame_15.png"
-   ]
+   ],
+   "gif": "clips/real__ball__fail_pick/clip.gif"
   },
   {
    "key": "real__ball__fail_move",
@@ -246,7 +253,8 @@ window.RAFD_DATA = {
     "clips/real__ball__fail_move/frame_13.png",
     "clips/real__ball__fail_move/frame_14.png",
     "clips/real__ball__fail_move/frame_15.png"
-   ]
+   ],
+   "gif": "clips/real__ball__fail_move/clip.gif"
   },
   {
    "key": "fv__fail_move",
@@ -276,37 +284,39 @@ window.RAFD_DATA = {
     "clips/fv__fail_move/frame_13.png",
     "clips/fv__fail_move/frame_14.png",
     "clips/fv__fail_move/frame_15.png"
-   ]
+   ],
+   "gif": "clips/fv__fail_move/clip.gif"
   },
   {
-   "key": "vfb__fail_move",
+   "key": "vfb__success",
    "source": "OOD \u00b7 cross-robot",
-   "title": "OOD robot \u00b7 dropped",
-   "gt_word": "drop",
-   "pred_word": "pick",
-   "ok": false,
-   "head": "FAILURE \u00b7 PICK",
-   "body": "The arm failed to pick up the object (missed or off-centre grasp).",
-   "conf": 0.917,
-   "correct": false,
+   "title": "OOD robot \u00b7 success",
+   "gt_word": "success",
+   "pred_word": "success",
+   "ok": true,
+   "head": "SUCCESS",
+   "body": "The arm picked the object and placed it correctly.",
+   "conf": 0.61,
+   "correct": true,
    "frames": [
-    "clips/vfb__fail_move/frame_00.png",
-    "clips/vfb__fail_move/frame_01.png",
-    "clips/vfb__fail_move/frame_02.png",
-    "clips/vfb__fail_move/frame_03.png",
-    "clips/vfb__fail_move/frame_04.png",
-    "clips/vfb__fail_move/frame_05.png",
-    "clips/vfb__fail_move/frame_06.png",
-    "clips/vfb__fail_move/frame_07.png",
-    "clips/vfb__fail_move/frame_08.png",
-    "clips/vfb__fail_move/frame_09.png",
-    "clips/vfb__fail_move/frame_10.png",
-    "clips/vfb__fail_move/frame_11.png",
-    "clips/vfb__fail_move/frame_12.png",
-    "clips/vfb__fail_move/frame_13.png",
-    "clips/vfb__fail_move/frame_14.png",
-    "clips/vfb__fail_move/frame_15.png"
-   ]
+    "clips/vfb__success/frame_00.png",
+    "clips/vfb__success/frame_01.png",
+    "clips/vfb__success/frame_02.png",
+    "clips/vfb__success/frame_03.png",
+    "clips/vfb__success/frame_04.png",
+    "clips/vfb__success/frame_05.png",
+    "clips/vfb__success/frame_06.png",
+    "clips/vfb__success/frame_07.png",
+    "clips/vfb__success/frame_08.png",
+    "clips/vfb__success/frame_09.png",
+    "clips/vfb__success/frame_10.png",
+    "clips/vfb__success/frame_11.png",
+    "clips/vfb__success/frame_12.png",
+    "clips/vfb__success/frame_13.png",
+    "clips/vfb__success/frame_14.png",
+    "clips/vfb__success/frame_15.png"
+   ],
+   "gif": "clips/vfb__success/clip.gif"
   }
  ]
 };

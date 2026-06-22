@@ -44,19 +44,29 @@
   .stage{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:22px;align-items:start}
   @media(max-width:860px){.stage{grid-template-columns:1fr}}
 
+  .step{margin-bottom:18px}
+  .steplabel{display:flex;align-items:center;gap:9px;margin:0 0 9px;font-weight:700;font-size:.96rem}
+  .stepnum{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;
+       background:var(--accent);color:#fff;font-size:.8rem;font-weight:700;flex:0 0 auto}
+  .steplabel .hint{color:var(--mut);font-weight:400;font-size:.85rem}
+
   .player{position:relative;background:#0b1220;border-radius:16px;overflow:hidden;aspect-ratio:500/340;
        display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(15,23,42,.12)}
   .player img{width:100%;height:100%;object-fit:contain;display:block}
-  .player .fnum{position:absolute;left:10px;bottom:10px;background:rgba(8,12,22,.7);color:#cbd5e1;
-       font:600 .72rem/1 var(--mono);padding:5px 8px;border-radius:8px;letter-spacing:.02em}
-  .strip{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:6px;scrollbar-width:thin}
-  .strip img{height:52px;width:auto;border-radius:7px;border:2px solid transparent;cursor:pointer;flex:0 0 auto;
-       opacity:.62;transition:opacity .12s,border-color .12s}
-  .strip img:hover{opacity:1}
-  .strip img.active{border-color:var(--accent);opacity:1}
+  .player .live{position:absolute;right:10px;top:10px;background:rgba(220,38,38,.92);color:#fff;
+       font:700 .66rem/1 var(--mono);padding:5px 8px;border-radius:7px;letter-spacing:.08em;
+       display:flex;align-items:center;gap:5px}
+  .player .live::before{content:"";width:6px;height:6px;border-radius:50%;background:#fff;
+       animation:blink 1.1s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .strip{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+  .strip img{width:100%;aspect-ratio:500/340;object-fit:cover;border-radius:6px;border:1px solid var(--line);
+       background:#0b1220}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;
        box-shadow:0 10px 30px rgba(15,23,42,.07);position:sticky;top:18px}
+  .card.good{border-top:4px solid var(--good)}
+  .card.bad{border-top:4px solid var(--bad)}
   .src{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
        color:var(--mut);background:var(--chip);border-radius:999px;padding:4px 11px;margin-bottom:14px}
   .pill{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:.82rem;letter-spacing:.06em;
@@ -95,19 +105,26 @@
   <div class="controls">
     <div class="selectwrap"><select id="pick"></select></div>
     <button id="prev" class="btn icon" title="Previous clip">&#8249;</button>
-    <button id="play" class="btn primary">&#9654;&nbsp; Play</button>
     <button id="next" class="btn icon" title="Next clip">&#8250;</button>
   </div>
 
   <div class="stage">
     <section>
-      <div class="player">
-        <img id="frame" alt="execution frame">
-        <span class="fnum" id="fnum"></span>
+      <div class="step">
+        <p class="steplabel"><span class="stepnum">1</span> Recorded execution
+          <span class="hint">&mdash; the full pick-and-place clip</span></p>
+        <div class="player"><img id="video" alt="execution video"><span class="live">REC</span></div>
       </div>
-      <div class="strip" id="strip"></div>
+      <div class="step">
+        <p class="steplabel"><span class="stepnum">2</span> Sampled into 16 frames
+          <span class="hint">&mdash; evenly spaced; the model's actual input</span></p>
+        <div class="strip" id="strip"></div>
+      </div>
     </section>
-    <aside class="card" id="card"></aside>
+    <aside>
+      <p class="steplabel"><span class="stepnum">3</span> Model verdict</p>
+      <div class="card" id="card"></div>
+    </aside>
   </div>
 
   <footer id="foot"></footer>
@@ -116,10 +133,9 @@
 <script src="data.js"></script>
 <script>
 const D=window.RAFD_DATA, sel=document.getElementById('pick'),
-      frame=document.getElementById('frame'), fnum=document.getElementById('fnum'),
-      strip=document.getElementById('strip'), card=document.getElementById('card'),
-      playBtn=document.getElementById('play');
-let cur=0, fi=0, timer=null;
+      video=document.getElementById('video'), strip=document.getElementById('strip'),
+      card=document.getElementById('card');
+let cur=0;
 
 const MODE={success:'Clean pick-and-place', pick:'Pick failure',
             drop:'Dropped in transit', place:'Wrong placement', release:'Object never released'};
@@ -127,16 +143,15 @@ const MODE={success:'Clean pick-and-place', pick:'Pick failure',
 D.clips.forEach((c,i)=>{const o=document.createElement('option');o.value=i;
   o.textContent=c.source+'  —  '+c.title;sel.appendChild(o);});
 
-function showFrame(i){const c=D.clips[cur];fi=(i+c.frames.length)%c.frames.length;
-  frame.src=c.frames[fi];fnum.textContent='frame '+(fi+1)+' / '+c.frames.length;
-  [...strip.children].forEach((t,k)=>t.classList.toggle('active',k===fi));}
-
-function render(){const c=D.clips[cur];stop();
+function render(){const c=D.clips[cur];
+  // step 1: the looping "video" (GIF); re-assign src to restart the loop
+  video.src=(c.gif||c.frames[0])+'?r='+Date.now();
+  // step 2: the 16 sampled frames
   strip.innerHTML='';
-  c.frames.forEach((f,k)=>{const t=document.createElement('img');t.src=f;t.loading='lazy';
-    t.onclick=()=>showFrame(k);strip.appendChild(t);});
-  showFrame(0);
+  c.frames.forEach((f)=>{const t=document.createElement('img');t.src=f;t.loading='lazy';strip.appendChild(t);});
+  // step 3: the verdict
   const conf=(c.conf==null)?null:Math.round(c.conf*100);
+  card.className='card '+(c.ok?'good':'bad');
   card.innerHTML=
     `<div class="src">${c.source}</div>`+
     `<div><span class="pill ${c.ok?'good':'bad'}"><span class="dot"></span>${c.ok?'SUCCESS':'FAILURE'}</span></div>`+
@@ -152,10 +167,6 @@ function render(){const c=D.clips[cur];stop();
         `<span class="${c.correct?'verdict-ok':'verdict-no'}">${c.correct?'✓ correct':'✗ mismatch'}</span></span></div>`+
     `</div>`;
 }
-function play(){if(timer)return;playBtn.innerHTML='&#10073;&#10073;&nbsp; Pause';
-  timer=setInterval(()=>showFrame(fi+1),180);}
-function stop(){if(timer){clearInterval(timer);timer=null;}playBtn.innerHTML='&#9654;&nbsp; Play';}
-playBtn.onclick=()=>{timer?stop():play();};
 sel.onchange=()=>{cur=+sel.value;render();};
 document.getElementById('prev').onclick=()=>{cur=(cur-1+D.clips.length)%D.clips.length;sel.value=cur;render();};
 document.getElementById('next').onclick=()=>{cur=(cur+1)%D.clips.length;sel.value=cur;render();};
