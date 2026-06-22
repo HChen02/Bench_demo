@@ -82,6 +82,7 @@
   .row .v{font-weight:600;text-align:right}
   code{font-family:var(--mono);font-size:.84rem;background:var(--chip);color:var(--ink);
        padding:3px 9px;border-radius:7px}
+  .tagmut{color:var(--mut);font-size:.78rem;font-weight:500}
   .confwrap{display:grid;gap:7px}
   .confhead{display:flex;justify-content:space-between;align-items:center;font-size:.92rem}
   .bar{height:9px;background:var(--chip);border-radius:999px;overflow:hidden}
@@ -138,7 +139,7 @@ const D=window.RAFD_DATA, sel=document.getElementById('pick'),
 let cur=0;
 
 const MODE={success:'Clean pick-and-place', pick:'Pick failure',
-            drop:'Dropped in transit', place:'Wrong placement', release:'Object never released'};
+            drop:'Dropped in transit', place:'Faulty placement', release:'Object never released'};
 
 D.clips.forEach((c,i)=>{const o=document.createElement('option');o.value=i;
   o.textContent=c.source+'  —  '+c.title;sel.appendChild(o);});
@@ -152,31 +153,45 @@ function render(){const c=D.clips[cur];
   // step 3: the verdict
   const conf=(c.conf==null)?null:Math.round(c.conf*100);
   card.className='card '+(c.ok?'good':'bad');
+  const yes='<span class="verdict-ok">✓ correct</span>',
+        no='<span class="verdict-no">✗ wrong</span>';
+  let gtline, detline, modeline='';
+  if(c.binary_only){
+    gtline=`<code>${c.gt_binary}</code> <span class="tagmut">binary-only set</span>`;
+    detline=c.binary_correct?yes:no;
+  }else{
+    gtline=`<code>${c.gt_mode||c.gt_binary}</code>`;
+    detline=c.binary_correct?yes:no;
+    if(c.gt_mode!=null)
+      modeline=`<div class="row"><span class="k">Failure mode</span>`+
+        `<span class="v"><code>${c.pred_word}</code> vs <code>${c.gt_mode}</code> &nbsp;`+
+        `${c.mode_correct?yes:no}</span></div>`;
+  }
   card.innerHTML=
     `<div class="src">${c.source}</div>`+
     `<div><span class="pill ${c.ok?'good':'bad'}"><span class="dot"></span>${c.ok?'SUCCESS':'FAILURE'}</span></div>`+
     `<h2 class="mode">${MODE[c.pred_word]||c.head}</h2>`+
     `<p class="desc">${c.body}</p>`+
     `<div class="rows">`+
-      `<div class="row"><span class="k">Model verdict</span><span class="v"><code>${c.pred_word}</code></span></div>`+
       `<div class="confwrap"><div class="confhead"><span class="k">Confidence</span>`+
         `<span class="v">${conf==null?'—':conf+'%'}</span></div>`+
         `<div class="bar"><i style="width:${conf==null?0:conf}%"></i></div></div>`+
-      `<div class="row"><span class="k">Ground truth</span>`+
-        `<span class="v"><code>${c.gt_word}</code> &nbsp;`+
-        `<span class="${c.correct?'verdict-ok':'verdict-no'}">${c.correct?'✓ correct':'✗ mismatch'}</span></span></div>`+
+      `<div class="row"><span class="k">Ground truth</span><span class="v">${gtline}</span></div>`+
+      `<div class="row"><span class="k">Detection (succ/fail)</span><span class="v">${detline}</span></div>`+
+      modeline+
     `</div>`;
 }
 sel.onchange=()=>{cur=+sel.value;render();};
 document.getElementById('prev').onclick=()=>{cur=(cur-1+D.clips.length)%D.clips.length;sel.value=cur;render();};
 document.getElementById('next').onclick=()=>{cur=(cur+1)%D.clips.length;sel.value=cur;render();};
 
-const n_ok=D.clips.filter(c=>c.correct).length;
+const ndet=D.clips.filter(c=>c.binary_correct).length;
 document.getElementById('foot').innerHTML=
   `<b>Model:</b> Unified-SFT, f16, Phase&nbsp;3 (Qwen3.5-4B QLoRA, 4-bit). `+
   `Verdict = arg&nbsp;max over the closed menu <code>{${D.menu.join(', ')}}</code>. `+
-  `${n_ok}/${D.clips.length} sample clips correct; the cross-robot (ViFailback) clip is the `+
-  `documented open frontier. &mdash; Bachelor's thesis, Hao Chen.`;
+  `<b>Detection (success/failure) correct on ${ndet}/${D.clips.length} sample clips.</b> `+
+  `It holds on Sim, the real robot and a viewpoint shift; on a neutral robot it detects but can mis-name the mode; `+
+  `on far-OOD (different robot <em>and</em> task) it breaks down &mdash; shown here honestly. &mdash; Bachelor's thesis, Hao Chen.`;
 
 render();
 </script>
