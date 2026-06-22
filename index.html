@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAFD - VLM robotic failure monitor</title>
+<style>
+  :root{ --accent:#0072B2; --good:#1B7837; --bad:#B2182B; --bg:#f6f7f9; --card:#fff; --ink:#1b1f24; --mut:#5b6570; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-size:1.5rem;margin:0 0 4px}
+  .sub{color:var(--mut);margin:0 0 22px;font-size:.96rem}
+  .sub b{color:var(--ink)}
+  .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+  select{font-size:1rem;padding:9px 12px;border:1px solid #cfd6dd;border-radius:9px;background:#fff;min-width:280px}
+  button{font-size:.95rem;padding:9px 14px;border:0;border-radius:9px;background:var(--accent);color:#fff;cursor:pointer}
+  button.ghost{background:#e7ebef;color:var(--ink)}
+  .stage{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start}
+  @media(max-width:760px){.stage{grid-template-columns:1fr}}
+  .player{background:#000;border-radius:12px;overflow:hidden;aspect-ratio:500/340;display:flex;align-items:center;justify-content:center}
+  .player img{width:100%;height:100%;object-fit:contain}
+  .strip{display:flex;gap:4px;overflow-x:auto;margin-top:8px;padding-bottom:4px}
+  .strip img{height:46px;border-radius:4px;border:2px solid transparent;cursor:pointer;flex:0 0 auto}
+  .strip img.active{border-color:var(--accent)}
+  .card{background:var(--card);border:1px solid #e4e8ec;border-radius:14px;padding:18px 18px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .badge{display:inline-block;font-weight:700;font-size:.78rem;letter-spacing:.04em;padding:4px 10px;border-radius:999px;color:#fff;margin-bottom:10px}
+  .verdict{font-size:1.32rem;font-weight:750;margin:2px 0 6px}
+  .body{color:var(--ink);margin:0 0 14px}
+  .meta{font-size:.9rem;color:var(--mut);border-top:1px solid #eef1f4;padding-top:12px;display:grid;gap:6px}
+  .meta code{background:#eef1f4;padding:1px 7px;border-radius:6px;color:var(--ink);font-size:.86rem}
+  .bar{height:7px;background:#eef1f4;border-radius:999px;overflow:hidden;margin-top:3px}
+  .bar > i{display:block;height:100%;background:var(--accent)}
+  .ok{color:var(--good);font-weight:650}.no{color:var(--bad);font-weight:650}
+  .src{display:inline-block;font-size:.74rem;color:var(--mut);border:1px solid #d8dee4;border-radius:999px;padding:2px 9px;margin-bottom:10px}
+  footer{color:var(--mut);font-size:.84rem;margin-top:30px;border-top:1px solid #e4e8ec;padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RAFD &middot; VLM robotic failure monitor</h1>
+  <p class="sub">A single <b>4-billion-parameter</b> vision&ndash;language model (Unified-SFT, 16 frames,
+     trained <b>only in simulation</b>) watches a pick-and-place execution and reports whether it
+     succeeded &mdash; and if not, <b>which failure mode</b>. Pick a sample clip.
+     <em>(Pre-computed static demo: verdicts are the model's actual deterministic outputs.)</em></p>
+
+  <div class="controls">
+    <select id="pick"></select>
+    <button id="play" class="ghost">&#9654; Play</button>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="player"><img id="frame" alt="frame"></div>
+      <div class="strip" id="strip"></div>
+    </div>
+    <div class="card" id="card"></div>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.RAFD_DATA, sel = document.getElementById('pick'),
+      frame = document.getElementById('frame'), strip = document.getElementById('strip'),
+      card = document.getElementById('card'), playBtn = document.getElementById('play');
+let cur = 0, fi = 0, timer = null;
+
+D.clips.forEach((c,i)=>{ const o=document.createElement('option'); o.value=i;
+  o.textContent=c.source+'  —  '+c.title; sel.appendChild(o); });
+
+function showFrame(i){ const c=D.clips[cur]; fi=(i+c.frames.length)%c.frames.length;
+  frame.src=c.frames[fi];
+  [...strip.children].forEach((t,k)=>t.classList.toggle('active',k===fi)); }
+
+function render(){ const c=D.clips[cur]; stop();
+  strip.innerHTML='';
+  c.frames.forEach((f,k)=>{ const t=document.createElement('img'); t.src=f;
+    t.onclick=()=>showFrame(k); strip.appendChild(t); });
+  showFrame(0);
+  const badgeColor=c.ok?'var(--good)':'var(--bad)';
+  const dot=c.ok?'🟢':'🔴';
+  const conf=(c.conf==null)?'—':Math.round(c.conf*100)+'%';
+  const confW=(c.conf==null)?0:Math.round(c.conf*100);
+  card.innerHTML =
+    `<span class="src">${c.source}</span><br>`+
+    `<span class="badge" style="background:${badgeColor}">${dot} ${c.ok?'SUCCESS':'FAILURE'}</span>`+
+    `<div class="verdict">${c.head}</div>`+
+    `<p class="body">${c.body}</p>`+
+    `<div class="meta">`+
+      `<div>Model verdict: <code>${c.pred_word}</code></div>`+
+      `<div>Confidence: ${conf}<div class="bar"><i style="width:${confW}%"></i></div></div>`+
+      `<div>Ground truth: <code>${c.gt_word}</code> &rarr; `+
+        `<span class="${c.correct?'ok':'no'}">${c.correct?'✔ correct':'✘ mismatch'}</span></div>`+
+    `</div>`;
+}
+function play(){ if(timer)return; playBtn.innerHTML='&#10073;&#10073; Pause';
+  timer=setInterval(()=>showFrame(fi+1),180); }
+function stop(){ if(timer){clearInterval(timer);timer=null;} playBtn.innerHTML='&#9654; Play'; }
+playBtn.onclick=()=>{ timer?stop():play(); };
+sel.onchange=()=>{ cur=+sel.value; render(); };
+
+const n_ok=D.clips.filter(c=>c.correct).length;
+document.getElementById('foot').innerHTML =
+  `Model: Unified-SFT, f16, Phase&nbsp;3 (Qwen3.5-4B QLoRA, 4-bit). `+
+  `Verdict = arg max over the closed menu {${D.menu.join(', ')}}. `+
+  `${n_ok}/${D.clips.length} sample clips correct; the cross-robot (ViFailback) clips are the `+
+  `documented open frontier. &mdash; TFG, Hao Chen.`;
+
+render();
+</script>
+</body>
+</html>
